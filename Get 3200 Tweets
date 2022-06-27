@@ -1,0 +1,61 @@
+import tweepy
+import csv
+import pandas as pd
+from sqlalchemy import create_engine
+import psycopg2
+
+# assign the values accordingly 
+consumer_key = "" 
+consumer_secret = "" 
+access_token = "" 
+access_token_secret = "" 
+  
+# authorization of consumer key and consumer secret 
+auth = tweepy.OAuthHandler(consumer_key, consumer_secret) 
+  
+# set access to user's access key and access secret  
+auth.set_access_token(access_token, access_token_secret) 
+  
+# calling the api  
+api = tweepy.API(auth) 
+
+search_key = "joebiden"
+csvFile = open(search_key+".csv","a+",newline="",encoding="utf-8")
+csvWriter = csv.writer(csvFile)
+
+for tweet in tweepy.Cursor(api.user_timeline,screen_name="JoeBiden", count = 200).items():
+    print(tweet.created_at, tweet.text)
+    tweets = [tweet.created_at,tweet.text.encode("utf-8")]
+    csvWriter.writerow(tweets)
+
+hostname = 'localhost'
+database = 'test'
+username = 'postgres'
+password = ''
+port_id = 5432
+
+def connectPostgreSQL():
+    conn = psycopg2.connect(host = hostname,
+                       dbname = database,
+                       user = username,
+                       password = password,
+                       port = port_id)
+    cur = conn.cursor()
+    
+    cur.execute('''CREATE TABLE if not exists tweet
+                    (
+                    Time character(256),
+                    description character(256)
+                    )''')
+    conn.commit()
+    conn.close()
+print('table tests is created!')
+#if _name_ == '_main_':
+# connectPostgreSQL()
+data = pd.read_csv('joebiden.csv', header = None, names = ['Time', 'Description'])
+
+engine = create_engine('postgresql://'+ username +':'+ password +'@localhost:5432/' + database)
+print("opened database successfully")
+df = pd.DataFrame(data,columns=['Time', 'Description'])
+df.to_sql(name='tweet', con=engine, if_exists='replace', index_label='ID')
+print("insert successfully")
