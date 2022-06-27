@@ -29,7 +29,7 @@ for tweet in tweepy.Cursor(api.user_timeline,screen_name="JoeBiden", count = 200
     csvWriter.writerow(tweets)
 
 hostname = 'localhost'
-database = 'test'
+database = 'tweepy'
 username = 'postgres'
 password = ''
 port_id = 5432
